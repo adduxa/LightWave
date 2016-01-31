@@ -4,6 +4,7 @@
 
 #include <avr/io.h>
 #include <stdio.h>
+#include <util/delay.h>
 
 #include "lib/uart/uart.h"
 #include "packets.h"
@@ -52,13 +53,22 @@ int main(void) {
 		WHITE_LIGHT,
 		OFF
 	};
-	enum mode_t mode = OFF;
+	enum mode_t mode = WAVE;
 	color_rgb_t color;
+	/*
+	float h = 0;
+	color_hsl_t qw = {0, 1, 0.5};
+	while(1) {
+		color_write(color_white_correct(color_hsl_to_rgb(qw), 100, 255, 10));
+		qw.H += 1;
+		qw.H = fmod(qw.H, 360.0);
+		_delay_ms(10);
+	}
+	*/
+	
 	
 	while (1) {
 		size_t size;
-		/* Blink led by toggling state of PORTB5 (Arduino digital 13). */
-        PORTB ^= _BV(PORTB5);
 		
 		uint8_t command;
 		size = fread(&command, 1, 1, stdin);
@@ -77,9 +87,39 @@ int main(void) {
 					fflush(stdin);
 					break;
 				}
+				color_hsl_t col_hsl = wave_color(wave);
+				printf("Color HSL: %0d %0d %0d\n", (int)col_hsl.H, (int)(col_hsl.S*100), (int)(col_hsl.L*100));
 				
-				color_rgb_t col_rgb = color_hsl_to_rgb(wave_color(wave));
+				color_rgb_t col_rgb = color_hsl_to_rgb(col_hsl);
+				col_rgb = color_white_correct(col_rgb, 100, 255, 10);
+				printf("Color RGB: %0x %0x %0x\n", col_rgb.R, col_rgb.G, col_rgb.B);
+				if(mode == WAVE) {
+					color_write(col_rgb);
+				}
+				break;
+			
+			case 'W':
+				//puts("got mini wave");
+				
+				if(0);
+				packet_mini_wave_t mini_wave;
+				size = fread(&mini_wave, sizeof(packet_mini_wave_t), 1, stdin);
+				if(size != 1) {
+					printf("Unexpected EOF: %d\n", size);
+					fflush(stdin);
+					break;
+				}
+				
+				wave.wave[0] = mini_wave.bass;
+				wave.vol = mini_wave.vol;
+				
+				col_hsl = wave_color(wave);
+				//printf("Color HSL: %0d %0d %0d\n", (int)col_hsl.H, (int)(col_hsl.S*100), (int)(col_hsl.L*100));
+				
+				col_rgb = color_hsl_to_rgb(col_hsl);
 				//col_rgb = color_white_correct(col_rgb, 255, 100, 80);
+				col_rgb = color_white_correct(col_rgb, 100, 255, 10);
+				//printf("Color RGB: %0x %0x %0x\n", col_rgb.R, col_rgb.G, col_rgb.B);
 				if(mode == WAVE) {
 					color_write(col_rgb);
 				}
@@ -155,9 +195,10 @@ int main(void) {
 			
 			default:
 				printf("Unknown command: %#x\n", command);
+				PORTB ^= _BV(PORTB5);
 		}
 		
-		fflush(stdin);
+		//fflush(stdin);
 	}
 
 	return 0;

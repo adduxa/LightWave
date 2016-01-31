@@ -10,6 +10,12 @@ typedef struct {
 } packet_wave_t;
 
 typedef struct {
+	uint8_t bass;
+	uint8_t vol;
+	
+} packet_mini_wave_t;
+
+typedef struct {
 	uint8_t command;
 	uint8_t args[8];
 	

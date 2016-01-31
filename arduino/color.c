@@ -24,16 +24,16 @@ color_rgb_t color_hsl_to_rgb(color_hsl_t col) {
 	float m = col.L - C/2;
 	
 	color_rgb_t col_rgb = {
-		(Ri + m) * 255,
-		(Gi + m) * 255,
-		(Bi + m) * 255
+		(int)((Ri + m) * 255),
+		(int)((Gi + m) * 255),
+		(int)((Bi + m) * 255)
 	};
 	return col_rgb;
 }
 
 color_rgb_t color_white_correct(color_rgb_t color, char r, char g, char b) {
-	color.R *= r;
-	color.G *= g;
-	color.B *= b;
+	color.R = (int)(floor((float)color.R / 255 * r));
+	color.G = (int)(floor((float)color.G / 255 * g));
+	color.B = (int)(floor((float)color.B / 255 * b));
 	return color;
 }
